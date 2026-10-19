@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { io } from "socket.io-client";
 import { authFetch } from "@/lib/authFetch";
 
-// socket.io server url, we will move this to an env file when we deploy
+// socket.io server url, it comes from the env file
 const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL
   ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, "")
   : "http://localhost:8000";
-export default function ChatPage() {
+
+function ChatContent() {
   const router = useRouter();
   const { userId } = useParams();
 
@@ -34,7 +35,8 @@ export default function ChatPage() {
     // my own id, to know which messages are mine
     let me = "";
     try {
-      me = JSON.parse(localStorage.getItem("user")).id;
+      const u = JSON.parse(localStorage.getItem("user"));
+      me = String(u.id || u._id || "");
     } catch (err) {
       me = "";
     }
@@ -248,3 +250,11 @@ export default function ChatPage() {
   );
 }
 
+// useParams needs Suspense in a production build
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<p className="center-text">Loading...</p>}>
+      <ChatContent />
+    </Suspense>
+  );
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { io } from "socket.io-client";
@@ -12,7 +12,7 @@ const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL
 
 const senderId = (m) => String((m.sender && m.sender._id) || m.sender);
 
-export default function GroupChatPage() {
+function GroupChatContent() {
   const router = useRouter();
   const { groupId } = useParams();
   const [messages, setMessages] = useState([]);
@@ -139,5 +139,14 @@ export default function GroupChatPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+// useParams needs Suspense in a production build
+export default function GroupChatPage() {
+  return (
+    <Suspense fallback={<p className="center-text">Loading...</p>}>
+      <GroupChatContent />
+    </Suspense>
   );
 }
