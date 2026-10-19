@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { apiRequest, getToken, removeToken } from "@/lib/api";
 
 const linkStyle = {
   display: "block",
@@ -15,30 +16,30 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
-  // only a logged in user can see this page
   useEffect(() => {
-    try {
-      const token = localStorage.getItem("token");
-      const saved = localStorage.getItem("user");
-
-      if (!token || !saved) {
-        router.replace("/login");
-        return;
-      }
-      setUser(JSON.parse(saved));
-    } catch (err) {
+    // no token means the user is not logged in
+    if (!getToken()) {
       router.replace("/login");
+      return;
     }
+
+    // ask the backend who this user is
+    apiRequest("/auth/me")
+      .then((data) => setUser(data.user))
+      .catch(() => {
+        // token is wrong or expired
+        removeToken();
+        router.replace("/login");
+      });
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    removeToken();
     router.replace("/login");
   };
 
   // nothing to show until we know who the user is
-  if (!user) return null;
+  if (!user) return <p className="center-text">Loading...</p>;
 
   return (
     <div className="auth-page">
@@ -52,6 +53,14 @@ export default function DashboardPage() {
 
         <Link href="/friends" className="btn" style={linkStyle}>
           Friends
+        </Link>
+
+        <Link href="/groups" className="btn" style={linkStyle}>
+          Groups
+        </Link>
+
+        <Link href="/premium" className="btn" style={linkStyle}>
+          Premium
         </Link>
 
         <p className="switch-text">
