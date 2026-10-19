@@ -7,8 +7,9 @@ import { io } from "socket.io-client";
 import { authFetch } from "@/lib/authFetch";
 
 // socket.io server url, we will move this to an env file when we deploy
-const SOCKET_URL = "http://localhost:8000";
-
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL
+  ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, "")
+  : "http://localhost:8000";
 export default function ChatPage() {
   const router = useRouter();
   const { userId } = useParams();
@@ -246,3 +247,4 @@ export default function ChatPage() {
     </div>
   );
 }
+
